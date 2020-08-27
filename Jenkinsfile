@@ -12,13 +12,12 @@ node('master') {
     echo "Build & Unit test"
     stash name: "binary", includes: "target/oven-0.0.1.war.src/pt/PLAN_A.jmx"
   }
-  stage('Integration Test') {
+  stage('Build') {
     withMaven(maven: 'M3') {
-        sh 'mvn clean test-compile failsafe:integration-test';
+        sh 'mvn clean package'
     }
-    junit '**/target/failsafe-reports/TEST-*.xml'
     archive 'target/*.jar'
-    echo "Integration Test"
+    stash name: "binary", includes: "target/oven-0.0.1.jar.src/pt/PLAN_A.jmx"
   }
 }
 
@@ -32,7 +31,7 @@ node('docker_pt') {
    stage ('Deploy'){
      echo "Start Deploy"
      unstash 'binary'
-     sh 'cp target/oven-0.0.1.war /home/jenkins/tomcat/webapps/';
+     sh 'cp target/oven-0.0.1.jar /home/jenkins/tomcat/webapps/';
    }
    stage ('Performance Testing'){
      sh '''cd /opt/jmeter/bin/
