@@ -20,7 +20,10 @@ node('master') {
     archive 'target/*.jar'
     echo "Integration Test"
   }
- node('docker_pt') {
+}
+
+
+node('docker_pt') {
    stage ('Start Tomcat'){
      echo "Start Tomcat"
      sh '''cd /home/jenkins/tomcat/bin
@@ -36,7 +39,8 @@ node('master') {
      ./jmeter.sh -n -t $WORKSPACE/src/pt/PLAN_A.jmx -l $WORKSPACE/test_report.jtl''';
      step([$class: 'ArtifactArchiver',artifacts: '**/*.jtl'])
    }
-}
+ }
+
 
 
 
