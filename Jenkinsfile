@@ -10,12 +10,7 @@ node('master') {
     junit '**/target/surefire-reports/TEST-*.xml'
     archive 'target/*.jar'
     echo "Build & Unit test"
-  }
-  stage('Static Code Analysis') {
-    withMaven(maven: 'M3') {
-        sh 'mvn clean verify sonar:sonar -Dsonar.host.url=http://172.30.15.214:9000 -Dsonar.projectName=oven -Dsonar.projectKey=oven -Dsonar.projectVersion=$BUILD_NUMBER'
-    }
-    echo "Static Code Analysis"
+    stash name: "binary", includes: "target/oven-0.0.1.war.src/pt/PLAN_A.jmx"
   }
   stage('Integration Test') {
     withMaven(maven: 'M3') {
@@ -27,16 +22,18 @@ node('master') {
   }
  node('docker_pt') {
    stage ('Start Tomcat'){
+     echo "Start Tomcat"
      sh '''cd /home/jenkins/tomcat/bin
      ./startup.sh''';
    }
    stage ('Deploy'){
+     echo "Start Deploy"
      unstash 'binary'
-     sh 'cp target/hello-0.0.1.war /home/jenkins/tomcat/webapps/';
+     sh 'cp target/oven-0.0.1.war /home/jenkins/tomcat/webapps/';
    }
    stage ('Performance Testing'){
      sh '''cd /opt/jmeter/bin/
-     ./jmeter.sh -n -t $WORKSPACE/src/pt/Hello_World_Test_Plan.jmx -l $WORKSPACE/test_report.jtl''';
+     ./jmeter.sh -n -t $WORKSPACE/src/pt/PLAN_A.jmx -l $WORKSPACE/test_report.jtl''';
      step([$class: 'ArtifactArchiver',artifacts: '**/*.jtl'])
    }
 }
